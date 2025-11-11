@@ -24,10 +24,19 @@ def element_stiffness_triangle(node_coords, k=1.0):
     x1, y1 = node_coords[0, 0], node_coords[0, 1]
     x2, y2 = node_coords[1, 0], node_coords[1, 1]
     x3, y3 = node_coords[2, 0], node_coords[2, 1]
-    area = []# element area
+    area = 0.5*abs(x1*(y2-y3)-x2*(y3-y1)-x3*(y1-y2))# element area
 
     # Shape function derivatives (constant over element)
-    B = [] #matrix B
+    y23 = y2 - y3
+    y31 = y3 - y1
+    y12 = y1 - y2
+    
+    x32 = x3 - x2
+    x13 = x1 - x3
+    x21 = x2 - x1
+    
+    B = 1/(2*area)*np.array([[y23, y31, y12],
+                             [x32, x13, x21]]) #matrix B
     Ke = k * area * (B.T @ B)
     return Ke
 
@@ -52,10 +61,12 @@ def assemble_global(nodes, elems, k=1.0):
         Ke = element_stiffness_triangle(coords, k=k)
         for i_local, i_global in enumerate(conn):
             for j_local, j_global in enumerate(conn):
-                # Assemble global Matrix K
-                K=[]
-
-    K = [] 
+                # Assemble global Matrix
+                rows.append(i_global)
+                cols.append(j_global)
+                data.append(Ke[i_local,j_local])
+                
+    K = sp.coo_matrix((data,(rows,cols)), shape=(nnodes, nnodes)).tocsr()
     return K
 
 
@@ -65,12 +76,13 @@ def apply_dirichlet(K, f, bc_nodes, bc_values):
     bc_nodes: array of node indices
     bc_values: array of prescribed values
     """
-    K = K.tocsr().copy()
+    K = K.tolil()
     f = f.copy()
     for node, val in zip(np.atleast_1d(bc_nodes), np.atleast_1d(bc_values)):
         #modify K and f accordingly    
-        K[node, node] = []
-        f[node] = []
+        K.rows[node] = [node]
+        K.data[node] = [1.0]
+        f[node] = val
     return K, f
 
 def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
@@ -90,7 +102,7 @@ def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
         x1, y1 = coords[n1]
         x2, y2 = coords[n2]
         L = np.hypot(x2-x1, y2-y1)
-        fe = [] # linear edge shape functions
+        fe = q * L / 2.0 * np.array([1.0, 1.0]) # linear edge shape functions
         f[conn[edge_nodes]] += fe
     return f
 
@@ -100,6 +112,8 @@ def apply_convection(K, f, nodes, elems, conv_bcs):
     Apply Robin (convection) BCs to load vector & matrix K.
     Each BC: (elem_id, edge_id, h, Tinf)
     """
+    K = K.tolil().copy()
+    f = f.copy()
     for elem_id, edge_id, h, Tinf in conv_bcs:
         conn = elems[elem_id]
         coords = nodes[conn, :2]
@@ -111,11 +125,19 @@ def apply_convection(K, f, nodes, elems, conv_bcs):
         n1, n2 = edge_nodes
         x1, y1 = coords[n1]
         x2, y2 = coords[n2]
+        L = np.hypot(x2-x1, y2-y1)
         #Modify K and F accordingly
-        K = []
-        f = []
-    return K, f
+        Ke = h * L / 6.0 * np.array([[2, 1],
+                                     [1, 2]])
+        fe = h * L * Tinf / 2.0 * np.array([1.0, 1.0])
 
+        edge_conn = conn[edge_nodes]
+        for i_local, i_global in enumerate(edge_conn):
+            f[i_global] += fe[i_local]
+            for j_local, j_global in enumerate(edge_conn):
+                K[i_global, j_global] += Ke[i_local, j_local]
+
+    return K.tocsr(), f
 
 def solve_system(K, f):
     """Solve the linear system Ku=f"""
