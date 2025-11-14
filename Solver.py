@@ -76,14 +76,23 @@ def apply_dirichlet(K, f, bc_nodes, bc_values):
     bc_nodes: array of node indices
     bc_values: array of prescribed values
     """
-    K = K.tolil()
+    K = K.tolil(copy=True)
     f = f.copy()
-    for node, val in zip(np.atleast_1d(bc_nodes), np.atleast_1d(bc_values)):
-        #modify K and f accordingly    
-        K.rows[node] = [node]
-        K.data[node] = [1.0]
+    for node, val in zip(bc_nodes, bc_values):
+        # Μηδενισμός γραμμής και στήλης
+        K[node, :] = 0
+        K[:, node] = 0
+        K[node, node] = 1.0
         f[node] = val
-    return K, f
+    return K.tocsr(), f
+
+def apply_dirichlet_penalty(K, f, bc_nodes, bc_values, alpha):
+    K = K.tolil(copy=True)
+    f = f.copy()
+    for node, val in zip(bc_nodes, bc_values):
+        K[node, node] += alpha
+        f[node] += alpha * val
+    return K.tocsr(), f
 
 def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
     """

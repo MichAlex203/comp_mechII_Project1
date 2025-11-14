@@ -8,7 +8,7 @@ Main Script
 """
 import numpy as np
 from PreProcessor import read_input_file
-from Solver import assemble_global, apply_convection, apply_dirichlet
+from Solver import assemble_global, apply_convection, apply_dirichlet, apply_dirichlet_penalty
 from Solver import apply_heat_flux, solve_system
 from PostProcessor import plot_mesh, plot_mesh_interactive, plot_temperature_field
 from PostProcessor import export_temperature_csv
@@ -26,11 +26,11 @@ K = assemble_global(nodes, elems, k=k)
 # Apply BCs
 bc_nodes = [node for node, val in bcs['temperature']]
 bc_values = [val for node, val in bcs['temperature']]
-Kmod, fmod = apply_dirichlet(K, np.zeros(nodes.shape[0]), bc_nodes, bc_values)
+Kmod, fmod = apply_dirichlet_penalty(K, np.zeros(nodes.shape[0]), bc_nodes, bc_values, 1)
 fmod       = apply_heat_flux(fmod, nodes, elems, bcs['heat_flux'])
 Kmod, fmod = apply_convection(K, fmod, nodes, elems, bcs['convection'])
 
-#
+# Solve
 u = solve_system(Kmod, fmod)
 
 # Call it in main
