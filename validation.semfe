@@ -22,7 +22,7 @@
       <!-- triangles using node IDs -->
       <elem id="1">1 2 3</elem>
       <elem id="2">1 3 5</elem>
-      <elem id="3">3 4 5</elem>
+      <elem id="3">5 3 4</elem>
     </Elements>
   </Geometry>
   
@@ -31,23 +31,20 @@
       <!-- Fixed temperature at left edge -->
       <temperature node="4" value="180.0"/>
       <temperature node="5" value="180.0"/>
-      <!-- Fixed temperature at right edge -->
-      <temperature node="2" value="0.0"/>
-      <temperature node="1" value="0.0"/>
     </Boundary>
     
     
   <!-- edge-based heat flux (Neumann BC) -->
   <HeatFlux>
     <!-- element id, local edge id (1–3 for tri3), and flux value -->
-    <flux elem="1" edge="2" value="0.0"/>  
-    <flux elem="2" edge="1" value="0.0"/>
+    <flux elem="1" edge="1" value="0.0"/>  
+    <flux elem="2" edge="3" value="0.0"/>
   </HeatFlux>
 
   <!-- convection boundary (Robin BC) -->
   <Convection>
     <conv elem="1" edge="2" h="50.0" Tinf="25.0"/>
-    <conv elem="3" edge="1" h="50.0" Tinf="25.0"/>
+    <conv elem="3" edge="2" h="50.0" Tinf="25.0"/>
   </Convection>
   
   </BoundaryConditions>
