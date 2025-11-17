@@ -79,11 +79,13 @@ def apply_dirichlet(K, f, bc_nodes, bc_values):
     K = K.tolil(copy=True)
     f = f.copy()
     for node, val in zip(bc_nodes, bc_values):
-        # Μηδενισμός γραμμής και στήλης
+        col = K[:, node].toarray().ravel()
+        f -= col * val
         K[node, :] = 0
         K[:, node] = 0
-        K[node, node] = 1.0
+        K[node, node] = 1
         f[node] = val
+
     return K.tocsr(), f
 
 def apply_dirichlet_penalty1(K, f, bc_nodes, bc_values, alpha):
@@ -97,7 +99,7 @@ def apply_dirichlet_penalty1(K, f, bc_nodes, bc_values, alpha):
 def compute_penalty_constant(K):
     """Compute penalty C = max|K_ij| * 1e4"""
     K_max = abs(K).max()
-    return float(K_max * 1e4)
+    return float(K_max * 1e-1)
 
 def apply_dirichlet_penalty2(K, f, bc_nodes, bc_values):
     K = K.tolil(copy=True)
@@ -115,7 +117,7 @@ def apply_dirichlet_penalty3(K, f, bc_nodes, bc_values):
     f = f.copy()
 
     for node, val in zip(bc_nodes, bc_values):
-        C = abs(K[node, node]) * 1e4
+        C = abs(K[node, node]) * 1e1
         if C == 0:  # fallback
             C = compute_penalty_constant(K)
 
@@ -128,7 +130,7 @@ def apply_dirichlet_penalty4(K, f, bc_nodes, bc_values):
     K = K.tolil(copy=True)
     f = f.copy()
 
-    C = float(abs(K).max() * 1e6)   # πιο ισχυρό penalty
+    C = float(abs(K).max() * 1e1)
 
     for node, val in zip(bc_nodes, bc_values):
         K[node, node] += C
@@ -141,6 +143,7 @@ def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
     Apply Neumann (heat flux) BCs to load vector.
     Each BC: (elem_id, edge_id, q)
     """
+    f = f.copy()
     for elem_id, edge_id, q in heat_flux_bcs:
         conn = elems[elem_id]
         coords = nodes[conn, :2]
@@ -153,7 +156,7 @@ def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
         x1, y1 = coords[n1]
         x2, y2 = coords[n2]
         L = np.hypot(x2-x1, y2-y1)
-        fe = q * L / 2.0 * np.array([1.0, 1.0]) # linear edge shape functions
+        fe = q * L * np.array([0.5, 0.5]) # linear edge shape functions
         f[conn[edge_nodes]] += fe
     return f
 
@@ -163,7 +166,7 @@ def apply_convection(K, f, nodes, elems, conv_bcs):
     Apply Robin (convection) BCs to load vector & matrix K.
     Each BC: (elem_id, edge_id, h, Tinf)
     """
-    K = K.tolil().copy()
+    K = K.tolil()
     f = f.copy()
     for elem_id, edge_id, h, Tinf in conv_bcs:
         conn = elems[elem_id]
