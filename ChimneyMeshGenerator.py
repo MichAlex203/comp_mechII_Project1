@@ -6,6 +6,7 @@ Created on Sun Nov 16 17:27:28 2025
 """
 
 import xml.etree.ElementTree as ET
+import xml.dom.minidom as md
 
 # ===========================
 # Mesh parameters
@@ -158,11 +159,15 @@ ET.SubElement(step, "HeatSource")
 # ===========================
 # WRITE XML FILE
 # ===========================
-tree = ET.ElementTree(root)
-tree.write("chimney.semfe",
-           encoding="ISO-8859-1",
-           xml_declaration=True)
+# Convert to a pretty-printed XML string
+xml_str = ET.tostring(root,encoding="ISO-8859-1")
+parsed = md.parseString(xml_str)
+pretty_xml = parsed.toprettyxml(indent="  ", encoding="ISO-8859-1")
 
+# Save as .semfe
+with open("chimney.semfe", "wb") as f:
+    f.write(pretty_xml)
+    
 print("Mesh generated → chimney.semfe")
 print("Total nodes:", len(nodes))
 print("Total elements:", len(elements))
