@@ -22,6 +22,9 @@ OUTER_H = 0.6
 HOLE_X1, HOLE_X2 = 0.2, 0.6
 HOLE_Y1, HOLE_Y2 = 0.2, 0.4
 
+# MATERIAL PROPERTY
+K_COND = 1.5
+
 # BC values
 T_INNER = 100.0
 T_TOP = 30.0
@@ -183,7 +186,7 @@ def write_xml(filename, nodes, elems, bottom, right, top, inner):
         # MATERIAL
         f.write('  <Materials>\n')
         f.write('    <Material id="1" name="Brick">\n')
-        f.write('      <conductivity>1.0</conductivity>\n')
+        f.write(f'      <conductivity>{K_COND}</conductivity>\n')
         f.write('    </Material>\n')
         f.write('  </Materials>\n\n')
 

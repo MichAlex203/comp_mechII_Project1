@@ -4,7 +4,7 @@
 
   <Materials>
     <Material id="1" name="Brick">
-      <conductivity>1.0</conductivity>
+      <conductivity>1.5</conductivity>
     </Material>
   </Materials>
 
