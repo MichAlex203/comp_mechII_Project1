@@ -16,10 +16,10 @@ from PostProcessor import export_temperature_csv
 
 
 # Import model info
-nodes, elems, materials, k, bcs = read_input_file('validation.semfe')
+nodes, elems, materials, k, bcs = read_input_file('Part 2 - Chimney/chimney.semfe')
 
 # Check Mesh Quality
-plot_mesh_interactive(nodes, elems, show=True, filename='interactive_mesh2.html')
+plot_mesh_interactive(nodes, elems, show=True, filename='Part 2 - Chimney/interactive_mesh_chimney.html')
 
 # Assemble global
 K = assemble_global(nodes, elems, k=k)
@@ -43,5 +43,5 @@ Kmod, fmod = apply_dirichlet(Kc, f2, bc_nodes, bc_values)
 u = solve_system(Kmod, fmod)
 
 # Call it in main
-plot_temperature_field(nodes, elems, u, filename='temperature_field.png')
+plot_temperature_field(nodes, elems, u, filename='Part 2 - Chimney/temperature_field.png')
 export_temperature_csv(nodes, u)
