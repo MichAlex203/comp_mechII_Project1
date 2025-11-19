@@ -88,55 +88,20 @@ def apply_dirichlet(K, f, bc_nodes, bc_values):
 
     return K.tocsr(), f
 
-def apply_dirichlet_penalty1(K, f, bc_nodes, bc_values, alpha):
+def apply_dirichlet_penalty(K, f, bc_nodes, bc_values, alpha):
     K = K.tolil(copy=True)
     f = f.copy()
     for node, val in zip(bc_nodes, bc_values):
         K[node, node] += alpha
         f[node] += alpha * val
-    return K.tocsr(), f
-
-def compute_penalty_constant(K):
-    """Compute penalty C = max|K_ij| * 1e4"""
+    
     K_max = abs(K).max()
-    return float(K_max * 1e-1)
-
-def apply_dirichlet_penalty2(K, f, bc_nodes, bc_values):
-    K = K.tolil(copy=True)
-    f = f.copy()
-    C = compute_penalty_constant(K)
-
+    C = K_max * 1e4
     for node, val in zip(bc_nodes, bc_values):
         K[node, node] += C
         f[node] += C * val
-
     return K.tocsr(), f
 
-def apply_dirichlet_penalty3(K, f, bc_nodes, bc_values):
-    K = K.tolil(copy=True)
-    f = f.copy()
-
-    for node, val in zip(bc_nodes, bc_values):
-        C = abs(K[node, node]) * 1e1
-        if C == 0:  # fallback
-            C = compute_penalty_constant(K)
-
-        K[node, node] += C
-        f[node] += C * val
-
-    return K.tocsr(), f
-
-def apply_dirichlet_penalty4(K, f, bc_nodes, bc_values):
-    K = K.tolil(copy=True)
-    f = f.copy()
-
-    C = float(abs(K).max() * 1e1)
-
-    for node, val in zip(bc_nodes, bc_values):
-        K[node, node] += C
-        f[node] += C * val
-
-    return K.tocsr(), f
 
 def apply_heat_flux(f, nodes, elems, heat_flux_bcs):
     """
