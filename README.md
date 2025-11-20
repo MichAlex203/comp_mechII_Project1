@@ -14,15 +14,22 @@ The pipeline receives as input an XML file, which contains:
 
 saved as .semfe
 
+#### FEM Heat Transfer Theory ####
+
+
 ## Input file ##
 For the first part of this project (Part 1 - Box), the input file was created manually. 
 
-For a more complex triangular mesh, the file ChimneyMeshGenerator.py (located in the Part 2 – Chimney folder) generates a triangular mesh for a square domain.
+For a more complex triangular mesh, the file **ChimneyMeshGenerator.py** (located in the Part 2 – Chimney folder) generates a triangular mesh for a square domain.
 This script was used for the second part of the project, so it includes parameters for creating a central hole - if required.
 
 In the mesh generator script, as parameters, we set:
 - The length and height of the square domain
-- (plus the size of the hole)
+- *plus the size of the hole*
 - The number of divisions on the x and y axes
 - The heat conductivity constant
 - and the BC values.
+
+## Main Script ##
+
+## Outputs ##
